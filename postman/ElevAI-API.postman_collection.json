@@ -1,0 +1,363 @@
+{
+	"info": {
+		"_postman_id": "elevai-api-2024",
+		"name": "ElevAI Backend API",
+		"description": "Complete API collection for ElevAI - Set authToken variable with your Supabase JWT",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [{"key": "token", "value": "{{authToken}}", "type": "string"}]
+	},
+	"variable": [
+		{"key": "baseUrl", "value": "http://localhost:3000"},
+		{"key": "authToken", "value": "YOUR_SUPABASE_JWT_TOKEN_HERE"}
+	],
+	"item": [
+		{
+			"name": "Health & Info",
+			"item": [
+				{
+					"name": "Root Info",
+					"request": {
+						"auth": {"type": "noauth"},
+						"method": "GET",
+						"url": "{{baseUrl}}/"
+					}
+				},
+				{
+					"name": "Health Check",
+					"request": {
+						"auth": {"type": "noauth"},
+						"method": "GET",
+						"url": "{{baseUrl}}/health"
+					}
+				},
+				{
+					"name": "Get All Features",
+					"request": {
+						"auth": {"type": "noauth"},
+						"method": "GET",
+						"url": "{{baseUrl}}/features"
+					}
+				}
+			]
+		},
+		{
+			"name": "Payment",
+			"item": [
+				{
+					"name": "Get Plans",
+					"request": {
+						"auth": {"type": "noauth"},
+						"method": "GET",
+						"url": "{{baseUrl}}/api/payment/plans"
+					}
+				},
+				{
+					"name": "Create Payment - Monthly",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"type\":\"subscription\",\"item\":\"monthly\",\"amount\":49000,\"tokens_amount\":200}"
+						},
+						"url": "{{baseUrl}}/api/payment/create"
+					}
+				},
+				{
+					"name": "Create Payment - Yearly",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"type\":\"subscription\",\"item\":\"yearly\",\"amount\":490000,\"tokens_amount\":2500}"
+						},
+						"url": "{{baseUrl}}/api/payment/create"
+					}
+				},
+				{
+					"name": "Buy Tokens - 50",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"type\":\"tokens\",\"item\":\"small\",\"amount\":15000,\"tokens_amount\":50}"
+						},
+						"url": "{{baseUrl}}/api/payment/create"
+					}
+				}
+			]
+		},
+		{
+			"name": "User",
+			"item": [
+				{
+					"name": "Get Profile",
+					"request": {"method": "GET", "url": "{{baseUrl}}/api/user/profile"}
+				},
+				{
+					"name": "Get Tokens",
+					"request": {"method": "GET", "url": "{{baseUrl}}/api/user/tokens"}
+				},
+				{
+					"name": "Get Transactions",
+					"request": {"method": "GET", "url": "{{baseUrl}}/api/user/transactions"}
+				},
+				{
+					"name": "Get Usage",
+					"request": {"method": "GET", "url": "{{baseUrl}}/api/user/usage"}
+				},
+				{
+					"name": "Get Subscription",
+					"request": {"method": "GET", "url": "{{baseUrl}}/api/user/subscription"}
+				}
+			]
+		},
+		{
+			"name": "Student Development",
+			"item": [
+				{
+					"name": "Ikigai - Stage 1",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"nama\":\"Budi\",\"jurusan\":\"Teknik Informatika\",\"semester\":6,\"universitas\":\"UI\",\"karirSesuaiJurusan\":\"ya_sesuai\",\"mbtiType\":\"INTJ\",\"viaStrengths\":[\"Creativity\",\"Curiosity\",\"Love of Learning\"],\"careerRoles\":[\"Software Engineer\",\"Data Scientist\",\"Product Manager\"]}"
+						},
+						"url": "{{baseUrl}}/api/student-development/ikigai/stage1"
+					}
+				},
+				{
+					"name": "Ikigai - Final",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"stage1Data\":{\"nama\":\"Budi\",\"jurusan\":\"Teknik Informatika\",\"semester\":6,\"universitas\":\"UI\",\"karirSesuaiJurusan\":\"ya_sesuai\",\"mbtiType\":\"INTJ\",\"viaStrengths\":[\"Creativity\",\"Curiosity\",\"Love of Learning\"],\"careerRoles\":[\"Software Engineer\",\"Data Scientist\",\"Product Manager\"]},\"selectedIkigaiSpot\":\"Digital Storycrafter\",\"selectedSliceOfLife\":\"Help students find their voice\"}"
+						},
+						"url": "{{baseUrl}}/api/student-development/ikigai/final"
+					}
+				},
+				{
+					"name": "SWOT Analysis",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"mbtiType\":\"INTJ\",\"viaStrengths\":[\"Creativity\",\"Curiosity\",\"Love of Learning\"]}"
+						},
+						"url": "{{baseUrl}}/api/student-development/swot"
+					}
+				},
+				{
+					"name": "Essay Exchanges",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"programName\":\"Erasmus+\",\"negaraUniversitas\":\"Germany, TUM\",\"motivasiAkademik\":\"Learn advanced AI\",\"motivasiPribadi\":\"Experience culture\",\"skillPengalaman\":\"3 years coding\",\"rencanKontribusi\":\"Share knowledge\"}"
+						},
+						"url": "{{baseUrl}}/api/student-development/essay-exchanges"
+					}
+				},
+				{
+					"name": "Interview - Start",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"namaPanggilan\":\"Budi\",\"jenisInterview\":\"beasiswa\",\"bahasa\":\"indonesia\",\"namaBeasiswa\":\"LPDP\"}"
+						},
+						"url": "{{baseUrl}}/api/student-development/interview/start"
+					}
+				},
+				{
+					"name": "Interview - Answer",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"sessionId\":\"REPLACE_WITH_SESSION_ID\",\"questionNumber\":1,\"answer\":\"Your answer here\"}"
+						},
+						"url": "{{baseUrl}}/api/student-development/interview/answer"
+					}
+				}
+			]
+		},
+		{
+			"name": "Asisten Lomba",
+			"item": [
+				{
+					"name": "Essay Idea",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"temaUtama\":\"Teknologi Pendidikan\",\"subTema\":\"AI dalam Pembelajaran\",\"latarBelakang\":\"Education needs innovation\",\"sertakanPenjelasan\":true,\"sertakanMetode\":true}"
+						},
+						"url": "{{baseUrl}}/api/asisten-lomba/essay-idea"
+					}
+				},
+				{
+					"name": "KTI Idea",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"temaUtama\":\"Machine Learning\",\"subTema\":\"Disease Detection\",\"latarBelakangUrgensi\":true,\"penelitianTerdahulu\":true,\"keterbaruan\":true,\"successRate\":true,\"langkahKonkret\":true,\"efisiensi\":true}"
+						},
+						"url": "{{baseUrl}}/api/asisten-lomba/kti-idea"
+					}
+				},
+				{
+					"name": "Business Plan",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"deskripsiBisnis\":\"Online mentoring platform connecting students with professionals\",\"ringkasanEksekutif\":true,\"analisisPasar\":true,\"strategiPemasaran\":true,\"keuangan\":true,\"analisisSWOT\":true}"
+						},
+						"url": "{{baseUrl}}/api/asisten-lomba/business-plan"
+					}
+				}
+			]
+		},
+		{
+			"name": "Personal Branding",
+			"item": [
+				{
+					"name": "Instagram - Analyze",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"bioContent\":\"Software Engineer | Tech Enthusiast 💻\",\"isImage\":false}"
+						},
+						"url": "{{baseUrl}}/api/personal-branding/instagram-bio/analyze"
+					}
+				},
+				{
+					"name": "Instagram - Generate",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"bioContent\":\"Software Engineer | Tech Enthusiast 💻\",\"analisisAwal\":\"Good but can be better\",\"tujuanUtama\":\"professional_networking\",\"gayaTulisan\":\"professional\",\"siapaKamu\":\"Full-stack Developer\",\"targetAudiens\":\"Recruiters\",\"pencapaian\":[\"3+ years\",\"10+ apps\",\"Open source\"],\"callToAction\":\"DM for collab\",\"hashtag\":\"#DevLife\"}"
+						},
+						"url": "{{baseUrl}}/api/personal-branding/instagram-bio/generate"
+					}
+				},
+				{
+					"name": "LinkedIn - Headline",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"targetOptimasi\":\"headline\",\"namaLengkap\":\"Budi Santoso\",\"jurusan\":\"Teknik Informatika\",\"semester\":6,\"targetKarir\":\"sesuai_jurusan\",\"tujuanUtama\":\"mencari_karir\",\"targetRole\":\"Software Engineer\",\"identitasProfesional\":\"Aspiring Developer\",\"pencapaian\":[\"Dean's List\",\"Hackathon Winner\"],\"skills\":[\"JavaScript\",\"React\",\"Node.js\"]}"
+						},
+						"url": "{{baseUrl}}/api/personal-branding/linkedin-optimizer"
+					}
+				},
+				{
+					"name": "LinkedIn - Summary",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"targetOptimasi\":\"summary\",\"namaLengkap\":\"Budi Santoso\",\"jurusan\":\"Teknik Informatika\",\"semester\":6,\"targetKarir\":\"sesuai_jurusan\",\"tujuanUtama\":\"mencari_karir\",\"targetRole\":\"Software Engineer\",\"identitasProfesional\":\"Aspiring Developer\",\"pencapaian\":[\"Dean's List\",\"Hackathon Winner\"],\"skills\":[\"JavaScript\",\"React\",\"Node.js\"]}"
+						},
+						"url": "{{baseUrl}}/api/personal-branding/linkedin-optimizer"
+					}
+				}
+			]
+		},
+		{
+			"name": "Daily Tools",
+			"item": [
+				{
+					"name": "Prompt Veo",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"subjekUtama\":\"Entrepreneur presenting\",\"aksiKegiatan\":\"Speaking to investors\",\"ekspresiEmosi\":\"Confident\",\"lokasiTempat\":\"Modern office\",\"waktu\":\"Afternoon\",\"pencahayaan\":\"Natural light\",\"gerakanKamera\":\"Slow zoom\",\"gayaVideo\":\"Documentary\",\"suasanaVideo\":\"Inspiring\",\"suaraMusik\":\"Uplifting\",\"dialog\":\"Future of education\",\"detailTambahan\":\"Show laptop with graphs\"}"
+						},
+						"url": "{{baseUrl}}/api/daily-tools/prompt-veo"
+					}
+				},
+				{
+					"name": "Enhancer - Topik Baru",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {"mode": "raw", "raw": "{\"prompt\":\"Explain machine learning\"}"},
+						"url": "{{baseUrl}}/api/daily-tools/prompt-enhancer/topik-baru"
+					}
+				},
+				{
+					"name": "Enhancer - Tugas",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {"mode": "raw", "raw": "{\"prompt\":\"Help me create a website\"}"},
+						"url": "{{baseUrl}}/api/daily-tools/prompt-enhancer/tugas"
+					}
+				},
+				{
+					"name": "Enhancer - Konten",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {"mode": "raw", "raw": "{\"prompt\":\"Write blog about AI\"}"},
+						"url": "{{baseUrl}}/api/daily-tools/prompt-enhancer/konten"
+					}
+				},
+				{
+					"name": "Enhancer - Rencana",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {"mode": "raw", "raw": "{\"prompt\":\"Create study schedule\"}"},
+						"url": "{{baseUrl}}/api/daily-tools/prompt-enhancer/rencana"
+					}
+				},
+				{
+					"name": "Enhancer - Brainstorming",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {"mode": "raw", "raw": "{\"prompt\":\"Ideas for startup\"}"},
+						"url": "{{baseUrl}}/api/daily-tools/prompt-enhancer/brainstorming"
+					}
+				},
+				{
+					"name": "Enhancer - Koding",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {"mode": "raw", "raw": "{\"prompt\":\"Build REST API\"}"},
+						"url": "{{baseUrl}}/api/daily-tools/prompt-enhancer/koding"
+					}
+				}
+			]
+		}
+	]
+}

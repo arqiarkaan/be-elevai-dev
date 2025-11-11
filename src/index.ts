@@ -38,7 +38,7 @@ app.get('/', (c) => {
       features: '/features',
       api: '/api',
     },
-    documentation: 'https://github.com/yourusername/be-elevai-dev',
+    documentation: 'https://github.com/arqiarkaan/be-elevai-dev',
   });
 });
 
