@@ -51,7 +51,7 @@ export class LLMService {
   /**
    * Generate streaming response from LLM
    */
-  async generateStreamingResponse(
+  generateStreamingResponse(
     prompt: string,
     systemPrompt?: string,
     temperature: number = 0.7
@@ -71,7 +71,7 @@ export class LLMService {
         content: prompt,
       });
 
-      const result = await streamText({
+      const result = streamText({
         model: this.model,
         messages,
         temperature,
@@ -103,7 +103,7 @@ export class LLMService {
 
       // Clean the response - remove markdown code blocks if present
       let jsonText = result.content.trim();
-      
+
       // Remove markdown code blocks
       if (jsonText.startsWith('```json')) {
         jsonText = jsonText.replace(/^```json\n?/, '').replace(/\n?```$/, '');
@@ -129,7 +129,11 @@ export class LLMService {
   ): Promise<T[]> {
     const fullPrompt = `${prompt}\n\nGenerate exactly ${count} items. Return as a JSON array.`;
 
-    return this.generateJSONResponse<T[]>(fullPrompt, systemPrompt, temperature);
+    return this.generateJSONResponse<T[]>(
+      fullPrompt,
+      systemPrompt,
+      temperature
+    );
   }
 }
 
