@@ -6,6 +6,7 @@ import { featureAccessMiddleware } from '../middleware/feature-access.js';
 import { llmService } from '../services/llm.service.js';
 import { TokenManager } from '../utils/token-manager.js';
 import { getPrompt, fillPrompt } from '../config/prompts.js';
+import { extractImageFromRequest, extractTextFromImage } from '../utils/image-parser.js';
 import type { Variables } from '../types/hono.js';
 import type { AuthUser, FeatureConfig } from '../types/index.js';
 
@@ -18,9 +19,49 @@ personalBranding.use('*', authMiddleware);
 // INSTAGRAM BIO ANALYZER
 // ============================================
 
+/**
+ * POST /api/personal-branding/instagram-bio/upload-image
+ * Upload Instagram bio screenshot and extract text
+ */
+personalBranding.post('/instagram-bio/upload-image', authMiddleware, async (c) => {  try {
+    const body = await c.req.parseBody();
+    
+    // Extract image
+    const imageData = await extractImageFromRequest(body);
+    
+    if (!imageData) {
+      return c.json(
+        {
+          success: false,
+          error: 'No image file provided',
+        },
+        400
+      );
+    }
+
+    // Extract text from image using Gemini Vision
+    const bioText = await extractTextFromImage(imageData.buffer, imageData.mimeType);
+
+    return c.json({
+      success: true,
+      data: {
+        bio_text: bioText,
+      },
+    });
+  } catch (error) {
+    console.error('Instagram bio image upload error:', error);
+    return c.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to process image',
+      },
+      500
+    );
+  }
+});
+
 const instagramBioStage1Schema = z.object({
-  bioContent: z.string().min(1),
-  isImage: z.boolean().optional(),
+  bioContent: z.string().min(1), // Text extracted from image
 });
 
 const instagramBioStage2Schema = z.object({
@@ -49,11 +90,11 @@ personalBranding.post(
 
     try {
       const prompt = `
-Analyze this Instagram bio:
+Analisis bio Instagram ini:
 
 ${input.bioContent}
 
-${input.isImage ? '(Note: This bio was extracted from an image)' : ''}
+(Catatan: Bio ini diekstrak dari screenshot gambar)
 `;
 
       const response = await llmService.generateResponse(
@@ -96,10 +137,10 @@ personalBranding.post(
 
     try {
       const prompt = `
-Generate 3 optimized Instagram bio variations:
+Buatkan 3 variasi bio Instagram yang optimized:
 
-Original Bio: ${input.bioContent}
-Previous Analysis: ${input.analisisAwal}
+Bio Original: ${input.bioContent}
+Analisis Sebelumnya: ${input.analisisAwal}
 
 Requirements:
 - Tujuan Utama: ${input.tujuanUtama}
@@ -110,7 +151,7 @@ Requirements:
 - CTA: ${input.callToAction}
 ${input.hashtag ? `- Hashtag: ${input.hashtag}` : ''}
 
-Return as JSON array of 3 bio strings (each under 150 characters).
+Return sebagai JSON array berisi 3 string bio (masing-masing di bawah 150 karakter).
 `;
 
       const bios = await llmService.generateJSONResponse<string[]>(
@@ -176,9 +217,9 @@ personalBranding.post(
 
     try {
       const prompt = `
-Optimize LinkedIn ${input.targetOptimasi}:
+Optimalkan LinkedIn ${input.targetOptimasi}:
 
-Profile Information:
+Informasi Profil:
 - Nama: ${input.namaLengkap}
 - Jurusan: ${input.jurusan}
 - Semester: ${input.semester}

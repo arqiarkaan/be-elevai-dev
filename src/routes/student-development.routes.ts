@@ -7,6 +7,7 @@ import { llmService } from '../services/llm.service.js';
 import { TokenManager } from '../utils/token-manager.js';
 import { getPrompt, fillPrompt } from '../config/prompts.js';
 import { generateSessionId } from '../utils/helpers.js';
+import { extractPDFFromRequest } from '../utils/pdf-parser.js';
 import type { Variables } from '../types/hono.js';
 import type { AuthUser, FeatureConfig } from '../types/index.js';
 
@@ -51,7 +52,7 @@ studentDev.post(
 
     try {
       const prompt = `
-User Profile:
+Profil User:
 - Nama: ${input.nama}
 - Jurusan: ${input.jurusan}
 - Semester: ${input.semester}
@@ -61,19 +62,19 @@ User Profile:
 - VIA Strengths: ${input.viaStrengths.join(', ')}
 - Career Roles: ${input.careerRoles.join(', ')}
 
-Generate 5 Ikigai Spots and 5 Slice of Life Purposes.
+Buatkan 5 Ikigai Spots dan 5 Slice of Life Purposes.
 `;
 
       // Generate spots
       const spots = await llmService.generateArray(
-        prompt + '\nGenerate 5 Ikigai career spots with title and description.',
+        prompt + '\nBuatkan 5 Ikigai career spots dengan title dan deskripsi.',
         getPrompt('ikigai.generateSpots'),
         5
       );
 
       // Generate purposes
       const purposes = await llmService.generateArray(
-        prompt + '\nGenerate 5 Slice of Life Purpose statements.',
+        prompt + '\nBuatkan 5 Slice of Life Purpose statements.',
         getPrompt('ikigai.generatePurposes'),
         5
       );
@@ -123,9 +124,9 @@ studentDev.post(
       const { stage1Data, selectedIkigaiSpot, selectedSliceOfLife } = input;
 
       const prompt = `
-Complete Ikigai Analysis for ${stage1Data.nama}
+Analisis Ikigai Lengkap untuk ${stage1Data.nama}
 
-Profile:
+Profil:
 - Jurusan: ${stage1Data.jurusan}
 - Semester: ${stage1Data.semester}
 - Universitas: ${stage1Data.universitas}
@@ -133,10 +134,10 @@ Profile:
 - VIA Strengths: ${stage1Data.viaStrengths.join(', ')}
 - Career Roles: ${stage1Data.careerRoles.join(', ')}
 
-Selected Ikigai Spot: ${selectedIkigaiSpot}
-Selected Life Purpose: ${selectedSliceOfLife}
+Ikigai Spot yang Dipilih: ${selectedIkigaiSpot}
+Life Purpose yang Dipilih: ${selectedSliceOfLife}
 
-Provide comprehensive analysis of their sweet spot for career and business.
+Berikan analisis komprehensif tentang sweet spot mereka untuk karir dan bisnis.
 `;
 
       const response = await llmService.generateResponse(
@@ -156,6 +157,7 @@ Provide comprehensive analysis of their sweet spot for career and business.
       return c.json({
         success: true,
         data: {
+          stage1_data: stage1Data,
           analysis: response.content,
           tokens_used: response.tokens_used,
         },
@@ -197,11 +199,11 @@ studentDev.post(
 
     try {
       const prompt = `
-Perform SWOT Analysis:
-- MBTI Type: ${input.mbtiType}
+Lakukan Analisis SWOT:
+- Tipe MBTI: ${input.mbtiType}
 - VIA Character Strengths: ${input.viaStrengths.join(', ')}
 
-Provide comprehensive SWOT analysis covering Strengths, Weaknesses, Opportunities, and Threats.
+Berikan analisis SWOT komprehensif yang mencakup Strengths, Weaknesses, Opportunities, dan Threats.
 `;
 
       const response = await llmService.generateResponse(
@@ -220,6 +222,10 @@ Provide comprehensive SWOT analysis covering Strengths, Weaknesses, Opportunitie
       return c.json({
         success: true,
         data: {
+          user_input: {
+            mbtiType: input.mbtiType,
+            viaStrengths: input.viaStrengths,
+          },
           analysis: response.content,
           tokens_used: response.tokens_used,
         },
@@ -320,16 +326,71 @@ ${input.rencanKontribusi}
 // INTERVIEW SIMULATION
 // ============================================
 
-// In-memory store for interview sessions (consider Redis for production)
+/**
+ * POST /api/student-development/interview/upload-cv
+ * Upload and extract text from CV PDF
+ */
+studentDev.post('/interview/upload-cv', authMiddleware, async (c) => {
+  try {
+    const body = await c.req.parseBody();
+    
+    // Extract text from PDF
+    const cvText = await extractPDFFromRequest(body);
+    
+    if (!cvText) {
+      return c.json(
+        {
+          success: false,
+          error: 'No CV file provided or invalid PDF',
+        },
+        400
+      );
+    }
+
+    return c.json({
+      success: true,
+      data: {
+        cv_text: cvText,
+      },
+    });
+  } catch (error) {
+    console.error('CV upload error:', error);
+    return c.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to process CV',
+      },
+      500
+    );
+  }
+});
+
+// In-memory store for interview sessions (Redis for production)
 const interviewSessions = new Map<string, any>();
 
 const interviewStartSchema = z.object({
   namaPanggilan: z.string().min(1),
+  cvContent: z.string().optional(), // CV text content (extracted from PDF)
   jenisInterview: z.enum(['beasiswa', 'magang']),
   bahasa: z.enum(['english', 'indonesia']).optional(),
   namaBeasiswa: z.string().optional(),
   posisiMagang: z.string().optional(),
-});
+}).refine(
+  (data) => {
+    // If beasiswa, bahasa and namaBeasiswa are required
+    if (data.jenisInterview === 'beasiswa') {
+      return data.bahasa && data.namaBeasiswa;
+    }
+    // If magang, posisiMagang is required
+    if (data.jenisInterview === 'magang') {
+      return data.posisiMagang;
+    }
+    return true;
+  },
+  {
+    message: 'Invalid input: beasiswa requires bahasa and namaBeasiswa, magang requires posisiMagang',
+  }
+);
 
 const interviewAnswerSchema = z.object({
   sessionId: z.string(),
@@ -354,20 +415,25 @@ studentDev.post(
 
       const context = {
         type: input.jenisInterview,
-        bahasa: input.bahasa || 'indonesia',
+        bahasa: input.jenisInterview === 'beasiswa' ? input.bahasa : 'indonesia',
         details:
           input.jenisInterview === 'beasiswa'
             ? input.namaBeasiswa
             : input.posisiMagang,
+        cvContent: input.cvContent,
       };
 
-      const prompt = `
-Generate first interview question for:
-- Name: ${input.namaPanggilan}
-- Type: ${input.jenisInterview}
-- Language: ${context.bahasa}
-- Details: ${context.details}
+      let prompt = `
+Buatkan pertanyaan interview pertama untuk:
+- Nama: ${input.namaPanggilan}
+- Tipe: ${input.jenisInterview}
+- Bahasa: ${context.bahasa}
+- Detail: ${context.details}
 `;
+
+      if (input.cvContent) {
+        prompt += `\n- CV/Resume:\n${input.cvContent}\n`;
+      }
 
       const systemPrompt = fillPrompt(getPrompt('interviewSimulation.generateQuestion'), {
         type: input.jenisInterview,
@@ -435,10 +501,10 @@ studentDev.post(
           .join('\n\n');
 
         const prompt = `
-Previous Q&A:
+Riwayat Q&A Sebelumnya:
 ${qaHistory}
 
-Generate question ${input.questionNumber + 1} of 5.
+Buatkan pertanyaan ${input.questionNumber + 1} dari 5.
 `;
 
         const systemPrompt = fillPrompt(getPrompt('interviewSimulation.generateQuestion'), {
@@ -465,10 +531,10 @@ Generate question ${input.questionNumber + 1} of 5.
         .join('\n\n');
 
       const evaluationPrompt = `
-Complete Interview Transcript:
+Transkrip Interview Lengkap:
 ${qaHistory}
 
-Provide comprehensive evaluation.
+Berikan evaluasi komprehensif.
 `;
 
       const evaluation = await llmService.generateResponse(

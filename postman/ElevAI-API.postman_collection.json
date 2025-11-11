@@ -169,13 +169,44 @@
 					}
 				},
 				{
-					"name": "Interview - Start",
+					"name": "Interview - Upload CV (Optional)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "cv",
+									"type": "file",
+									"src": "/path/to/cv.pdf",
+									"description": "Upload CV PDF file (max 5MB)"
+								}
+							]
+						},
+						"url": "{{baseUrl}}/api/student-development/interview/upload-cv"
+					}
+				},
+				{
+					"name": "Interview - Start (Beasiswa)",
 					"request": {
 						"method": "POST",
 						"header": [{"key": "Content-Type", "value": "application/json"}],
 						"body": {
 							"mode": "raw",
-							"raw": "{\"namaPanggilan\":\"Budi\",\"jenisInterview\":\"beasiswa\",\"bahasa\":\"indonesia\",\"namaBeasiswa\":\"LPDP\"}"
+							"raw": "{\"namaPanggilan\":\"Budi\",\"cvContent\":\"OPTIONAL: CV text from upload-cv endpoint\",\"jenisInterview\":\"beasiswa\",\"bahasa\":\"indonesia\",\"namaBeasiswa\":\"LPDP\"}"
+						},
+						"url": "{{baseUrl}}/api/student-development/interview/start"
+					}
+				},
+				{
+					"name": "Interview - Start (Magang)",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"namaPanggilan\":\"Budi\",\"cvContent\":\"OPTIONAL: CV text from upload-cv endpoint\",\"jenisInterview\":\"magang\",\"posisiMagang\":\"Software Engineer Intern\"}"
 						},
 						"url": "{{baseUrl}}/api/student-development/interview/start"
 					}
@@ -239,13 +270,32 @@
 			"name": "Personal Branding",
 			"item": [
 				{
+					"name": "Instagram - Upload Image",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "image",
+									"type": "file",
+									"src": "/path/to/instagram-bio-screenshot.png",
+									"description": "Upload Instagram bio screenshot (max 5MB)"
+								}
+							]
+						},
+						"url": "{{baseUrl}}/api/personal-branding/instagram-bio/upload-image"
+					}
+				},
+				{
 					"name": "Instagram - Analyze",
 					"request": {
 						"method": "POST",
 						"header": [{"key": "Content-Type", "value": "application/json"}],
 						"body": {
 							"mode": "raw",
-							"raw": "{\"bioContent\":\"Software Engineer | Tech Enthusiast 💻\",\"isImage\":false}"
+							"raw": "{\"bioContent\":\"Software Engineer | Tech Enthusiast 💻\\nBuilding cool stuff\\n🚀 DM for collaboration\"}"
 						},
 						"url": "{{baseUrl}}/api/personal-branding/instagram-bio/analyze"
 					}

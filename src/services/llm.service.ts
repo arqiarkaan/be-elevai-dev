@@ -7,7 +7,7 @@ import type { LLMResponse } from '../types/index.js';
  * LLM Service using Vercel AI SDK with Google Gemini
  */
 export class LLMService {
-  private model = google('gemini-2.5-flash');
+  private model = google('gemini-2.5-flash-lite');
 
   /**
    * Generate text response from LLM
@@ -15,7 +15,7 @@ export class LLMService {
   async generateResponse(
     prompt: string,
     systemPrompt?: string,
-    temperature: number = 0.7
+    temperature: number = 0.3
   ): Promise<LLMResponse> {
     try {
       const messages: any[] = [];
@@ -54,7 +54,7 @@ export class LLMService {
   generateStreamingResponse(
     prompt: string,
     systemPrompt?: string,
-    temperature: number = 0.7
+    temperature: number = 0.3
   ) {
     try {
       const messages: any[] = [];
@@ -90,7 +90,7 @@ export class LLMService {
   async generateJSONResponse<T = any>(
     prompt: string,
     systemPrompt?: string,
-    temperature: number = 0.7
+    temperature: number = 0.3
   ): Promise<T> {
     try {
       const fullPrompt = `${prompt}\n\nIMPORTANT: Respond ONLY with valid JSON. Do not include any markdown formatting, code blocks, or explanatory text.`;
@@ -125,7 +125,7 @@ export class LLMService {
     prompt: string,
     systemPrompt: string,
     count: number = 5,
-    temperature: number = 0.8
+    temperature: number = 0.3
   ): Promise<T[]> {
     const fullPrompt = `${prompt}\n\nGenerate exactly ${count} items. Return as a JSON array.`;
 

@@ -48,7 +48,7 @@ dailyTools.post(
 
     try {
       const prompt = `
-Create an optimized video generation prompt for Google Veo:
+Buatkan prompt video generation yang optimized untuk Google Veo:
 
 Subjek: ${input.subjekUtama}
 Aksi/Kegiatan: ${input.aksiKegiatan}
@@ -124,10 +124,10 @@ function createPromptEnhancerRoute(
 
       try {
         const enhancePrompt = `
-Original Prompt:
+Prompt Original:
 ${input.prompt}
 
-Enhance this prompt to be more effective.
+Enhance prompt ini agar lebih efektif.
 `;
 
         const response = await llmService.generateResponse(

@@ -41,7 +41,7 @@ asistenLomba.post(
 
     try {
       let prompt = `
-Generate creative essay ideas:
+Buatkan ide-ide essay yang kreatif:
 
 Tema Utama: ${input.temaUtama}
 Sub-Tema: ${input.subTema}
@@ -52,11 +52,11 @@ Sub-Tema: ${input.subTema}
       }
 
       if (input.sertakanPenjelasan) {
-        prompt += '\n\nInclude detailed explanations for each title.';
+        prompt += '\n\nSertakan penjelasan detail untuk setiap judul.';
       }
 
       if (input.sertakanMetode) {
-        prompt += '\n\nInclude suggested methods/technologies.';
+        prompt += '\n\nSertakan saran metode/teknologi.';
       }
 
       const response = await llmService.generateResponse(
@@ -122,12 +122,12 @@ asistenLomba.post(
 
     try {
       let prompt = `
-Generate innovative scientific paper (KTI) ideas:
+Buatkan ide Karya Tulis Ilmiah (KTI) yang inovatif:
 
 Tema Utama: ${input.temaUtama}
 Sub-Tema: ${input.subTema}
 
-Include these components:
+Sertakan komponen berikut:
 `;
 
       const components: string[] = [];
@@ -138,7 +138,7 @@ Include these components:
       if (input.langkahKonkret) components.push('Langkah Konkret');
       if (input.efisiensi) components.push('Efisiensi');
 
-      prompt += components.length > 0 ? components.join(', ') : 'All key components';
+      prompt += components.length > 0 ? components.join(', ') : 'Semua komponen utama';
 
       const response = await llmService.generateResponse(
         prompt,
@@ -201,12 +201,12 @@ asistenLomba.post(
 
     try {
       let prompt = `
-Create a comprehensive business plan:
+Buatkan business plan komprehensif:
 
 Deskripsi Bisnis:
 ${input.deskripsiBisnis}
 
-Include these sections:
+Sertakan sections berikut:
 `;
 
       const sections: string[] = [];
@@ -216,7 +216,7 @@ Include these sections:
       if (input.keuangan) sections.push('Keuangan');
       if (input.analisisSWOT) sections.push('Analisis SWOT');
 
-      prompt += sections.length > 0 ? sections.join(', ') : 'All key sections';
+      prompt += sections.length > 0 ? sections.join(', ') : 'Semua sections utama';
 
       const response = await llmService.generateResponse(
         prompt,
