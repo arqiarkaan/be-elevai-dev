@@ -156,41 +156,38 @@ export const FEATURES: Record<string, FeatureConfig> = {
 
 export const SUBSCRIPTION_PLANS = {
   monthly: {
-    name: 'Premium Monthly',
+    name: 'Premium 1 Bulan',
     duration: 'monthly',
     price: 39000,
     tokens: 30,
-    description: 'Access all premium features + 30 tokens',
+    description: 'Akses penuh semua fitur premium ElevAI selama 30 hari.',
+    isBestValue: false,
   },
   yearly: {
-    name: 'Premium Yearly',
+    name: 'Premium 1 Tahun',
     duration: 'yearly',
     price: 390000,
     tokens: 150,
-    description: 'Access all premium features + 150 tokens (Save 17%)',
+    description:
+      'Hemat lebih banyak dengan akses premium penuh selama 365 hari.',
+    isBestValue: true,
   },
 };
 
 export const TOKEN_PACKAGES = {
   small: {
-    name: '5 Tokens',
+    name: '5 Token',
     amount: 5,
     price: 7495,
+    description: 'Cocok untuk mencoba beberapa fitur premium.',
+    isBestValue: false,
   },
   medium: {
-    name: '10 Tokens',
+    name: '10 Token',
     amount: 10,
     price: 9999,
-  },
-  large: {
-    name: '50 Tokens',
-    amount: 50,
-    price: 44950,
-  },
-  xlarge: {
-    name: '100 Tokens',
-    amount: 100,
-    price: 79900,
+    description: 'Pilihan populer untuk pengguna reguler.',
+    isBestValue: true,
   },
 };
 
