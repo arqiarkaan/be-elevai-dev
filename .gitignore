@@ -26,3 +26,10 @@ lerna-debug.log*
 
 # misc
 .DS_Store
+
+# Google Cloud credentials
+credentials/
+*-service-account-key.json
+*-credentials.json
+google-cloud-*.json
+*.json.key

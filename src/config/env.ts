@@ -4,6 +4,9 @@ export const env = {
   // Google Gemini
   googleApiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY || '',
 
+  // Google Cloud (for TTS)
+  googleCloudCredentials: process.env.GOOGLE_APPLICATION_CREDENTIALS || '',
+
   // Supabase
   supabaseUrl: process.env.SUPABASE_URL || '',
   supabaseAnonKey: process.env.SUPABASE_ANON_KEY || '',

@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { authMiddleware } from '../middleware/auth.js';
 import { featureAccessMiddleware } from '../middleware/feature-access.js';
 import { llmService } from '../services/llm.service.js';
+import { ttsService } from '../services/tts.service.js';
 import { TokenManager } from '../utils/token-manager.js';
 import { getPrompt, fillPrompt } from '../config/prompts.js';
 import { generateSessionId } from '../utils/helpers.js';
@@ -57,7 +58,9 @@ Profil User:
 - Jurusan: ${input.jurusan}
 - Semester: ${input.semester}
 - Universitas: ${input.universitas}
-- Ingin Karir Sesuai Jurusan: ${input.karirSesuaiJurusan === 'ya_sesuai' ? 'Ya' : 'Tidak, ingin explore'}
+- Ingin Karir Sesuai Jurusan: ${
+        input.karirSesuaiJurusan === 'ya_sesuai' ? 'Ya' : 'Tidak, ingin explore'
+      }
 - MBTI: ${input.mbtiType}
 - VIA Strengths: ${input.viaStrengths.join(', ')}
 - Career Roles: ${input.careerRoles.join(', ')}
@@ -167,7 +170,10 @@ Berikan analisis komprehensif tentang sweet spot mereka untuk karir dan bisnis.
       return c.json(
         {
           success: false,
-          error: error instanceof Error ? error.message : 'Failed to generate analysis',
+          error:
+            error instanceof Error
+              ? error.message
+              : 'Failed to generate analysis',
         },
         500
       );
@@ -235,7 +241,10 @@ Berikan analisis SWOT komprehensif yang mencakup Strengths, Weaknesses, Opportun
       return c.json(
         {
           success: false,
-          error: error instanceof Error ? error.message : 'Failed to generate analysis',
+          error:
+            error instanceof Error
+              ? error.message
+              : 'Failed to generate analysis',
         },
         500
       );
@@ -314,7 +323,8 @@ ${input.rencanKontribusi}
       return c.json(
         {
           success: false,
-          error: error instanceof Error ? error.message : 'Failed to generate essay',
+          error:
+            error instanceof Error ? error.message : 'Failed to generate essay',
         },
         500
       );
@@ -333,10 +343,10 @@ ${input.rencanKontribusi}
 studentDev.post('/interview/upload-cv', authMiddleware, async (c) => {
   try {
     const body = await c.req.parseBody();
-    
+
     // Extract text from PDF
     const cvText = await extractPDFFromRequest(body);
-    
+
     if (!cvText) {
       return c.json(
         {
@@ -368,29 +378,32 @@ studentDev.post('/interview/upload-cv', authMiddleware, async (c) => {
 // In-memory store for interview sessions (Redis for production)
 const interviewSessions = new Map<string, any>();
 
-const interviewStartSchema = z.object({
-  namaPanggilan: z.string().min(1),
-  cvContent: z.string().optional(), // CV text content (extracted from PDF)
-  jenisInterview: z.enum(['beasiswa', 'magang']),
-  bahasa: z.enum(['english', 'indonesia']).optional(),
-  namaBeasiswa: z.string().optional(),
-  posisiMagang: z.string().optional(),
-}).refine(
-  (data) => {
-    // If beasiswa, bahasa and namaBeasiswa are required
-    if (data.jenisInterview === 'beasiswa') {
-      return data.bahasa && data.namaBeasiswa;
+const interviewStartSchema = z
+  .object({
+    namaPanggilan: z.string().min(1),
+    cvContent: z.string().optional(), // CV text content (extracted from PDF)
+    jenisInterview: z.enum(['beasiswa', 'magang']),
+    bahasa: z.enum(['english', 'indonesia']).optional(),
+    namaBeasiswa: z.string().optional(),
+    posisiMagang: z.string().optional(),
+  })
+  .refine(
+    (data) => {
+      // If beasiswa, bahasa and namaBeasiswa are required
+      if (data.jenisInterview === 'beasiswa') {
+        return data.bahasa && data.namaBeasiswa;
+      }
+      // If magang, posisiMagang is required
+      if (data.jenisInterview === 'magang') {
+        return data.posisiMagang;
+      }
+      return true;
+    },
+    {
+      message:
+        'Invalid input: beasiswa requires bahasa and namaBeasiswa, magang requires posisiMagang',
     }
-    // If magang, posisiMagang is required
-    if (data.jenisInterview === 'magang') {
-      return data.posisiMagang;
-    }
-    return true;
-  },
-  {
-    message: 'Invalid input: beasiswa requires bahasa and namaBeasiswa, magang requires posisiMagang',
-  }
-);
+  );
 
 const interviewAnswerSchema = z.object({
   sessionId: z.string(),
@@ -415,7 +428,8 @@ studentDev.post(
 
       const context = {
         type: input.jenisInterview,
-        bahasa: input.jenisInterview === 'beasiswa' ? input.bahasa : 'indonesia',
+        bahasa:
+          input.jenisInterview === 'beasiswa' ? input.bahasa : 'indonesia',
         details:
           input.jenisInterview === 'beasiswa'
             ? input.namaBeasiswa
@@ -424,26 +438,60 @@ studentDev.post(
       };
 
       let prompt = `
-Buatkan pertanyaan interview pertama untuk:
-- Nama: ${input.namaPanggilan}
-- Tipe: ${input.jenisInterview}
-- Bahasa: ${context.bahasa}
-- Detail: ${context.details}
+Buatkan pertanyaan interview PERTAMA untuk:
+- Nama Kandidat: ${input.namaPanggilan}
+- Tipe Interview: ${input.jenisInterview === 'beasiswa' ? 'Beasiswa' : 'Magang'}
+- Bahasa: ${context.bahasa === 'english' ? 'English' : 'Bahasa Indonesia'}
+- ${
+        input.jenisInterview === 'beasiswa'
+          ? `Nama Beasiswa: ${input.namaBeasiswa}`
+          : `Posisi Magang: ${input.posisiMagang}`
+      }
+
+KHUSUS PERTANYAAN PERTAMA: 
+- WAJIB panggil nama "${
+        input.namaPanggilan
+      }" di dalam pertanyaan untuk ice breaker dan kesan personal
+- Gunakan info beasiswa/posisi yang SPESIFIK (${
+        context.details
+      }) tanpa placeholder
+- Pertanyaan harus complete dan siap digunakan
+- Buat opening yang warm dan welcoming
 `;
 
       if (input.cvContent) {
-        prompt += `\n- CV/Resume:\n${input.cvContent}\n`;
+        prompt += `\n- CV/Resume Kandidat:\n${input.cvContent}\n`;
       }
 
-      const systemPrompt = fillPrompt(getPrompt('interviewSimulation.generateQuestion'), {
-        type: input.jenisInterview,
-      });
+      const systemPrompt = fillPrompt(
+        getPrompt('interviewSimulation.generateQuestion'),
+        {
+          type: input.jenisInterview === 'beasiswa' ? 'beasiswa' : 'magang',
+        }
+      );
 
       const response = await llmService.generateResponse(prompt, systemPrompt);
+
+      // Generate audio for the question
+      let audioBase64: string | undefined;
+      try {
+        // Use appropriate voice based on language
+        if (context.bahasa === 'english') {
+          audioBase64 = await ttsService.textToSpeechEnglish(response.content);
+        } else {
+          audioBase64 = await ttsService.textToSpeechIndonesian(
+            response.content
+          );
+        }
+      } catch (audioError) {
+        console.error('TTS error (non-blocking):', audioError);
+        // Continue without audio if TTS fails
+      }
 
       // Store session
       interviewSessions.set(sessionId, {
         userId: user.id,
+        userName: input.namaPanggilan, // Store user's preferred name
         context,
         qa: [{ question: response.content, answer: null }],
         createdAt: Date.now(),
@@ -454,6 +502,7 @@ Buatkan pertanyaan interview pertama untuk:
         data: {
           session_id: sessionId,
           question: response.content,
+          question_audio: audioBase64, // Base64 encoded MP3 audio
           question_number: 1,
           total_questions: 5,
         },
@@ -463,7 +512,10 @@ Buatkan pertanyaan interview pertama untuk:
       return c.json(
         {
           success: false,
-          error: error instanceof Error ? error.message : 'Failed to start interview',
+          error:
+            error instanceof Error
+              ? error.message
+              : 'Failed to start interview',
         },
         500
       );
@@ -497,21 +549,64 @@ studentDev.post(
       // If not the last question, generate next one
       if (input.questionNumber < 5) {
         const qaHistory = session.qa
-          .map((qa: any, i: number) => `Q${i + 1}: ${qa.question}\nA${i + 1}: ${qa.answer || 'Not answered yet'}`)
+          .map(
+            (qa: any, i: number) =>
+              `Q${i + 1}: ${qa.question}\nA${i + 1}: ${
+                qa.answer || 'Not answered yet'
+              }`
+          )
           .join('\n\n');
 
         const prompt = `
+Context Interview:
+- Tipe Interview: ${session.context.type === 'beasiswa' ? 'Beasiswa' : 'Magang'}
+- Detail: ${session.context.details}
+- Bahasa: ${
+          session.context.bahasa === 'english' ? 'English' : 'Bahasa Indonesia'
+        }
+
 Riwayat Q&A Sebelumnya:
 ${qaHistory}
 
 Buatkan pertanyaan ${input.questionNumber + 1} dari 5.
+
+PENTING: 
+- JANGAN panggil nama kandidat (sudah dipanggil di pertanyaan pertama saja)
+- JANGAN gunakan placeholder seperti "{bidang studi}", "[your field]", dll
+- Gunakan info spesifik yang sudah ada (${session.context.details})
+- Pertanyaan harus complete dan siap digunakan
+- Pertanyaan langsung to the point, professional
 `;
 
-        const systemPrompt = fillPrompt(getPrompt('interviewSimulation.generateQuestion'), {
-          type: session.context.type,
-        });
+        const systemPrompt = fillPrompt(
+          getPrompt('interviewSimulation.generateQuestion'),
+          {
+            type: session.context.type,
+          }
+        );
 
-        const response = await llmService.generateResponse(prompt, systemPrompt);
+        const response = await llmService.generateResponse(
+          prompt,
+          systemPrompt
+        );
+
+        // Generate audio for the next question
+        let audioBase64: string | undefined;
+        try {
+          // Use appropriate voice based on language
+          if (session.context.bahasa === 'english') {
+            audioBase64 = await ttsService.textToSpeechEnglish(
+              response.content
+            );
+          } else {
+            audioBase64 = await ttsService.textToSpeechIndonesian(
+              response.content
+            );
+          }
+        } catch (audioError) {
+          console.error('TTS error (non-blocking):', audioError);
+          // Continue without audio if TTS fails
+        }
 
         session.qa.push({ question: response.content, answer: null });
 
@@ -519,6 +614,7 @@ Buatkan pertanyaan ${input.questionNumber + 1} dari 5.
           success: true,
           data: {
             question: response.content,
+            question_audio: audioBase64, // Base64 encoded MP3 audio
             question_number: input.questionNumber + 1,
             total_questions: 5,
           },
@@ -527,7 +623,10 @@ Buatkan pertanyaan ${input.questionNumber + 1} dari 5.
 
       // Last question answered - generate evaluation
       const qaHistory = session.qa
-        .map((qa: any, i: number) => `Q${i + 1}: ${qa.question}\nA${i + 1}: ${qa.answer}`)
+        .map(
+          (qa: any, i: number) =>
+            `Q${i + 1}: ${qa.question}\nA${i + 1}: ${qa.answer}`
+        )
         .join('\n\n');
 
       const evaluationPrompt = `
@@ -541,6 +640,24 @@ Berikan evaluasi komprehensif.
         evaluationPrompt,
         getPrompt('interviewSimulation.generateEvaluation')
       );
+
+      // Generate audio for evaluation
+      let evaluationAudioBase64: string | undefined;
+      try {
+        // Use appropriate voice based on language
+        if (session.context.bahasa === 'english') {
+          evaluationAudioBase64 = await ttsService.textToSpeechEnglish(
+            evaluation.content
+          );
+        } else {
+          evaluationAudioBase64 = await ttsService.textToSpeechIndonesian(
+            evaluation.content
+          );
+        }
+      } catch (audioError) {
+        console.error('TTS error for evaluation (non-blocking):', audioError);
+        // Continue without audio if TTS fails
+      }
 
       // Consume tokens
       await TokenManager.consumeTokens(
@@ -560,6 +677,7 @@ Berikan evaluasi komprehensif.
           completed: true,
           qa_history: session.qa,
           evaluation: evaluation.content,
+          evaluation_audio: evaluationAudioBase64, // Base64 encoded MP3 audio
           tokens_used: evaluation.tokens_used,
         },
       });
@@ -568,7 +686,8 @@ Berikan evaluasi komprehensif.
       return c.json(
         {
           success: false,
-          error: error instanceof Error ? error.message : 'Failed to process answer',
+          error:
+            error instanceof Error ? error.message : 'Failed to process answer',
         },
         500
       );
