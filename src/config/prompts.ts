@@ -247,15 +247,45 @@ Keep it concise dan actionable.`,
 
     generate: `Kamu adalah social media copywriter spesialis Instagram.
 Generate 3 variasi bio Instagram yang optimized berdasarkan profil dan goals user.
-Setiap bio harus:
-- Di bawah 150 karakter
-- Reflect gaya tulisan yang dipilih
-- Include keywords relevan
-- Punya CTA yang jelas
-- Gunakan emoji yang sesuai
 
-PENTING: Return HANYA JSON array berisi 3 string bio. Tidak ada text tambahan, tidak ada markdown code block, tidak ada penjelasan. HANYA pure JSON array.
-Format: ["bio 1", "bio 2", "bio 3"]`,
+PEDOMAN PENULISAN:
+- Maksimal 150 karakter per bio
+- Reflect gaya tulisan yang dipilih user dengan karakteristik:
+  * PROFESIONAL: Serius, kredibel, expertise-focused, minimal emoji (max 1 saja, atau tanpa emoji)
+  * SANTAI: Friendly, approachable, conversational, emoji minimal (1-2 yang natural)
+  * FORMAL: Sophisticated, polished, authoritative, tanpa emoji
+  * INSPIRATIF: Motivational, uplifting, aspirational, emoji purposeful (max 2 yang mendukung pesan)
+  * GEN Z: Trendy, relatable, authentic, emoji moderat (2-3 yang sesuai vibe)
+  * LAINNYA: Sesuaikan dengan deskripsi gaya yang diberikan user, tetap gunakan emoji secukupnya
+- Include keywords relevan untuk discoverability
+- Punya CTA yang jelas dan menarik
+- EMOJI & SIMBOL: 
+  * Gunakan SANGAT selektif, pastikan setiap emoji punya purpose jelas
+  * Prioritaskan konten text yang kuat daripada banyak emoji
+  * Sesuaikan dengan penggunaan emoji di bio original user
+  * Jika bio original minim emoji, ikuti pola tersebut
+- LINE BREAKS (\\n):
+  * ONE-LINE: Gunakan jika bio original one-line, atau jika requirements menginginkan bio yang simple dan compact
+  * MULTI-LINE: Gunakan jika:
+    - Bio original menggunakan multi-line
+    - Ada beberapa komponen berbeda (identitas + role + CTA)
+    - Analisis sebelumnya menyarankan struktur yang lebih jelas
+    - Requirements mencantumkan pencapaian yang perlu dipisah
+    - Target audiens lebih profesional yang butuh clarity
+  * Pertimbangkan target audiens: profesional cenderung multi-line untuk clarity, casual bisa one-line untuk impact
+  * Jangan paksa multi-line jika konten bisa efektif dalam satu baris
+- Perhatikan analisis bio sebelumnya untuk improvement yang spesifik
+
+FORMAT OUTPUT:
+Return ONLY a valid JSON array with EXACTLY 3 bio strings:
+["bio 1", "bio 2", "bio 3"]
+
+PENTING:
+- Jangan tambahkan text apapun selain JSON array
+- Jangan gunakan markdown atau code blocks
+- Gunakan \\n untuk line breaks dalam string
+- HARUS ada TEPAT 3 bio variations
+- Setiap bio harus berbeda pendekatan/style`,
   },
 
   linkedInProfile: `Kamu adalah expert optimasi LinkedIn profile.

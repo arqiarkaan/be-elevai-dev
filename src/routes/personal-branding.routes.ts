@@ -6,7 +6,10 @@ import { featureAccessMiddleware } from '../middleware/feature-access.js';
 import { llmService } from '../services/llm.service.js';
 import { TokenManager } from '../utils/token-manager.js';
 import { getPrompt, fillPrompt } from '../config/prompts.js';
-import { extractImageFromRequest, extractTextFromImage } from '../utils/image-parser.js';
+import {
+  extractImageFromRequest,
+  extractTextFromImage,
+} from '../utils/image-parser.js';
 import type { Variables } from '../types/hono.js';
 import type { AuthUser, FeatureConfig } from '../types/index.js';
 
@@ -23,42 +26,51 @@ personalBranding.use('*', authMiddleware);
  * POST /api/personal-branding/instagram-bio/upload-image
  * Upload Instagram bio screenshot and extract text
  */
-personalBranding.post('/instagram-bio/upload-image', authMiddleware, async (c) => {  try {
-    const body = await c.req.parseBody();
-    
-    // Extract image
-    const imageData = await extractImageFromRequest(body);
-    
-    if (!imageData) {
+personalBranding.post(
+  '/instagram-bio/upload-image',
+  authMiddleware,
+  async (c) => {
+    try {
+      const body = await c.req.parseBody();
+
+      // Extract image
+      const imageData = await extractImageFromRequest(body);
+
+      if (!imageData) {
+        return c.json(
+          {
+            success: false,
+            error: 'No image file provided',
+          },
+          400
+        );
+      }
+
+      // Extract text from image using Gemini Vision
+      const bioText = await extractTextFromImage(
+        imageData.buffer,
+        imageData.mimeType
+      );
+
+      return c.json({
+        success: true,
+        data: {
+          bio_text: bioText,
+        },
+      });
+    } catch (error) {
+      console.error('Instagram bio image upload error:', error);
       return c.json(
         {
           success: false,
-          error: 'No image file provided',
+          error:
+            error instanceof Error ? error.message : 'Failed to process image',
         },
-        400
+        500
       );
     }
-
-    // Extract text from image using Gemini Vision
-    const bioText = await extractTextFromImage(imageData.buffer, imageData.mimeType);
-
-    return c.json({
-      success: true,
-      data: {
-        bio_text: bioText,
-      },
-    });
-  } catch (error) {
-    console.error('Instagram bio image upload error:', error);
-    return c.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to process image',
-      },
-      500
-    );
   }
-});
+);
 
 const instagramBioStage1Schema = z.object({
   bioContent: z.string().min(1), // Text extracted from image
@@ -114,7 +126,8 @@ ${input.bioContent}
       return c.json(
         {
           success: false,
-          error: error instanceof Error ? error.message : 'Failed to analyze bio',
+          error:
+            error instanceof Error ? error.message : 'Failed to analyze bio',
         },
         500
       );
@@ -156,8 +169,27 @@ Return sebagai JSON array berisi 3 string bio (masing-masing di bawah 150 karakt
 
       const bios = await llmService.generateJSONResponse<string[]>(
         prompt,
-        getPrompt('instagramBio.generate')
+        getPrompt('instagramBio.generate'),
+        0.7 // Higher temperature for more creative variations
       );
+
+      // Validate response structure
+      if (!Array.isArray(bios)) {
+        throw new Error('Invalid response: expected array of bios');
+      }
+
+      if (bios.length !== 3) {
+        console.warn(`Expected 3 bios but got ${bios.length}`);
+      }
+
+      // Ensure all bios are strings and not empty
+      const validBios = bios.filter(
+        (bio) => typeof bio === 'string' && bio.trim().length > 0
+      );
+
+      if (validBios.length === 0) {
+        throw new Error('No valid bios generated');
+      }
 
       await TokenManager.consumeTokens(
         user.id,
@@ -169,7 +201,7 @@ Return sebagai JSON array berisi 3 string bio (masing-masing di bawah 150 karakt
       return c.json({
         success: true,
         data: {
-          bios: Array.isArray(bios) ? bios : [bios],
+          bios: validBios,
         },
       });
     } catch (error) {
@@ -177,7 +209,8 @@ Return sebagai JSON array berisi 3 string bio (masing-masing di bawah 150 karakt
       return c.json(
         {
           success: false,
-          error: error instanceof Error ? error.message : 'Failed to generate bios',
+          error:
+            error instanceof Error ? error.message : 'Failed to generate bios',
         },
         500
       );
@@ -223,8 +256,14 @@ Informasi Profil:
 - Nama: ${input.namaLengkap}
 - Jurusan: ${input.jurusan}
 - Semester: ${input.semester}
-- Target Karir: ${input.targetKarir === 'sesuai_jurusan' ? 'Sesuai jurusan' : 'Eksplorasi'}
-- Tujuan: ${input.tujuanUtama === 'mencari_karir' ? 'Mencari karir' : 'Personal branding'}
+- Target Karir: ${
+        input.targetKarir === 'sesuai_jurusan' ? 'Sesuai jurusan' : 'Eksplorasi'
+      }
+- Tujuan: ${
+        input.tujuanUtama === 'mencari_karir'
+          ? 'Mencari karir'
+          : 'Personal branding'
+      }
 - Target Role: ${input.targetRole}
 - Identitas Profesional: ${input.identitasProfesional}
 - Pencapaian: ${input.pencapaian.join(', ')}
@@ -258,7 +297,10 @@ Informasi Profil:
       return c.json(
         {
           success: false,
-          error: error instanceof Error ? error.message : 'Failed to optimize profile',
+          error:
+            error instanceof Error
+              ? error.message
+              : 'Failed to optimize profile',
         },
         500
       );
