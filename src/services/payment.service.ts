@@ -6,11 +6,11 @@ import {
   verifyMidtransSignature,
   calculatePremiumExpiry,
 } from '../utils/helpers.js';
-import {
-  SUBSCRIPTION_PLANS,
-  TOKEN_PACKAGES,
-} from '../config/features.js';
-import type { CreatePaymentRequest, MidtransNotification } from '../types/index.js';
+import { SUBSCRIPTION_PLANS, TOKEN_PACKAGES } from '../config/features.js';
+import type {
+  CreatePaymentRequest,
+  MidtransNotification,
+} from '../types/index.js';
 
 /**
  * Payment Service for Midtrans integration
@@ -82,7 +82,9 @@ export class PaymentService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Basic ${Buffer.from(this.serverKey + ':').toString('base64')}`,
+          Authorization: `Basic ${Buffer.from(this.serverKey + ':').toString(
+            'base64'
+          )}`,
         },
         body: JSON.stringify(snapRequest),
       });
@@ -116,7 +118,14 @@ export class PaymentService {
    */
   async handleNotification(notification: MidtransNotification) {
     try {
-      const { order_id, transaction_status, fraud_status, signature_key, gross_amount, status_code } = notification;
+      const {
+        order_id,
+        transaction_status,
+        fraud_status,
+        signature_key,
+        gross_amount,
+        status_code,
+      } = notification;
 
       // Verify signature
       const expectedSignature = verifyMidtransSignature(
@@ -144,7 +153,10 @@ export class PaymentService {
       // Handle transaction status
       let newStatus: 'pending' | 'completed' | 'failed' = 'pending';
 
-      if (transaction_status === 'capture' || transaction_status === 'settlement') {
+      if (
+        transaction_status === 'capture' ||
+        transaction_status === 'settlement'
+      ) {
         if (fraud_status === 'accept' || !fraud_status) {
           newStatus = 'completed';
           await this.processSuccessfulPayment(transaction);
@@ -160,7 +172,8 @@ export class PaymentService {
       // Update transaction status
       await db.updateTransaction(order_id, {
         status: newStatus,
-        completed_at: newStatus === 'completed' ? new Date().toISOString() : undefined,
+        completed_at:
+          newStatus === 'completed' ? new Date().toISOString() : undefined,
       });
 
       return { success: true, status: newStatus };
@@ -203,21 +216,38 @@ export class PaymentService {
         );
       } else if (transaction.type === 'tokens') {
         // Handle token purchase
-        const packageKey = transaction.item as keyof typeof TOKEN_PACKAGES;
-        const tokenPackage = TOKEN_PACKAGES[packageKey];
+        if (transaction.item === 'custom') {
+          // Handle custom token amount
+          if (!transaction.tokens_amount) {
+            throw new Error('Custom token amount not specified');
+          }
 
-        if (!tokenPackage) {
-          throw new Error('Invalid token package');
+          // Add custom tokens
+          await TokenManager.addTokens(
+            transaction.user_id,
+            transaction.tokens_amount,
+            'purchase',
+            transaction.id,
+            `Purchased ${transaction.tokens_amount} custom tokens`
+          );
+        } else {
+          // Handle predefined token packages
+          const packageKey = transaction.item as keyof typeof TOKEN_PACKAGES;
+          const tokenPackage = TOKEN_PACKAGES[packageKey];
+
+          if (!tokenPackage) {
+            throw new Error('Invalid token package');
+          }
+
+          // Add purchased tokens
+          await TokenManager.addTokens(
+            transaction.user_id,
+            tokenPackage.amount,
+            'purchase',
+            transaction.id,
+            `Purchased ${tokenPackage.name}`
+          );
         }
-
-        // Add purchased tokens
-        await TokenManager.addTokens(
-          transaction.user_id,
-          tokenPackage.amount,
-          'purchase',
-          transaction.id,
-          `Purchased ${tokenPackage.name}`
-        );
       }
     } catch (error) {
       console.error('Process payment error:', error);
