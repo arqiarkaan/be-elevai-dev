@@ -10,6 +10,7 @@ import type { Variables } from './types/hono.js';
 
 // Import routes
 import healthRoutes from './routes/health.routes.js';
+import featuresRoutes from './routes/features.routes.js';
 import paymentRoutes from './routes/payment.routes.js';
 import userRoutes from './routes/user.routes.js';
 import studentDevRoutes from './routes/student-development.routes.js';
@@ -32,7 +33,8 @@ app.get('/', (c) => {
     success: true,
     message: '🚀 ElevAI Backend API',
     version: '1.0.0',
-    description: 'Your No. 1 Holistic Student Development with Smart AI-Personalized',
+    description:
+      'Your No. 1 Holistic Student Development with Smart AI-Personalized',
     endpoints: {
       health: '/health',
       features: '/features',
@@ -44,7 +46,7 @@ app.get('/', (c) => {
 
 // Health & Info routes
 app.route('/health', healthRoutes);
-app.route('/features', healthRoutes);
+app.route('/features', featuresRoutes);
 
 // API routes with rate limiting
 app.use('/api/*', apiRateLimit);
