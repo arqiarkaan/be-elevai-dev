@@ -665,24 +665,6 @@ Berikan evaluasi komprehensif.
         getPrompt('interviewSimulation.generateEvaluation')
       );
 
-      // Generate audio for evaluation
-      let evaluationAudioBase64: string | undefined;
-      try {
-        // Use appropriate voice based on language
-        if (session.context.bahasa === 'english') {
-          evaluationAudioBase64 = await ttsService.textToSpeechEnglish(
-            evaluation.content
-          );
-        } else {
-          evaluationAudioBase64 = await ttsService.textToSpeechIndonesian(
-            evaluation.content
-          );
-        }
-      } catch (audioError) {
-        console.error('TTS error for evaluation (non-blocking):', audioError);
-        // Continue without audio if TTS fails
-      }
-
       // Consume tokens
       await TokenManager.consumeTokens(
         user.id,
@@ -701,7 +683,6 @@ Berikan evaluasi komprehensif.
           completed: true,
           qa_history: session.qa,
           evaluation: evaluation.content,
-          evaluation_audio: evaluationAudioBase64, // Base64 encoded MP3 audio
           tokens_used: evaluation.tokens_used,
         },
       });
