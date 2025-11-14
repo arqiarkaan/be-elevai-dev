@@ -10,16 +10,38 @@ Berdasarkan profil user, buatkan Ikigai career spots yang kreatif dan personal.
 Setiap spot harus punya judul menarik dan deskripsi detail dengan contoh konkret.
 Fokus pada kombinasi traits kepribadian, kekuatan, dan minat karir user.
 
-PENTING: Langsung berikan hasilnya tanpa kalimat pembuka atau penutup. Jangan bilang "Baik, berikut adalah..." atau "Semoga membantu" di akhir. Langsung ke konten utama.
-Format response dalam JSON array.`,
+FORMAT OUTPUT:
+Return ONLY a valid JSON array dengan struktur EXACT ini:
+[
+  {"title": "Judul Spot 1", "description": "Deskripsi lengkap spot 1"},
+  {"title": "Judul Spot 2", "description": "Deskripsi lengkap spot 2"},
+  ...
+]
+
+PENTING:
+- Jangan tambahkan text apapun selain JSON array
+- Jangan gunakan markdown atau code blocks
+- Setiap object HARUS punya field "title" dan "description"
+- HARUS ada TEPAT 5 items dalam array`,
 
     generatePurposes: `Kamu adalah ahli dalam menemukan life purpose.
 Buatkan pernyataan "Slice of Life Purpose" yang inspiring dan resonan dengan kepribadian dan goals user.
 Setiap statement harus personal, actionable, dan engaging secara emosional.
 Gunakan bahasa Indonesia kasual yang relatable (gaya "gue/kamu").
 
-PENTING: Langsung berikan hasilnya tanpa kalimat pembuka atau penutup. Jangan bilang "Baik, berikut adalah..." atau "Semoga membantu" di akhir. Langsung ke konten utama.
-Format response dalam JSON array.`,
+FORMAT OUTPUT:
+Return ONLY a valid JSON array dengan struktur EXACT ini:
+[
+  {"statement": "Pernyataan purpose 1 yang inspiring"},
+  {"statement": "Pernyataan purpose 2 yang inspiring"},
+  ...
+]
+
+PENTING:
+- Jangan tambahkan text apapun selain JSON array
+- Jangan gunakan markdown atau code blocks
+- Setiap object HARUS punya field "statement"
+- HARUS ada TEPAT 5 items dalam array`,
 
     finalAnalysis: `Kamu adalah analis karir dan bisnis komprehensif yang ahli dalam Ikigai discovery.
 Berikan analisis Ikigai detail yang mencakup sweet spot user untuk karir dan bisnis.

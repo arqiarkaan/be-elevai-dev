@@ -75,12 +75,36 @@ Buatkan 5 Ikigai Spots dan 5 Slice of Life Purposes.
         5
       );
 
+      // Validate spots structure
+      if (!Array.isArray(spots) || spots.length !== 5) {
+        throw new Error('Invalid spots response from LLM');
+      }
+
+      // Ensure each spot has required fields
+      spots.forEach((spot: any, index: number) => {
+        if (!spot.title || !spot.description) {
+          throw new Error(`Spot ${index + 1} missing required fields`);
+        }
+      });
+
       // Generate purposes
       const purposes = await llmService.generateArray(
         prompt + '\nBuatkan 5 Slice of Life Purpose statements.',
         getPrompt('ikigai.generatePurposes'),
         5
       );
+
+      // Validate purposes structure
+      if (!Array.isArray(purposes) || purposes.length !== 5) {
+        throw new Error('Invalid purposes response from LLM');
+      }
+
+      // Ensure each purpose has required field
+      purposes.forEach((purpose: any, index: number) => {
+        if (!purpose.statement) {
+          throw new Error(`Purpose ${index + 1} missing statement field`);
+        }
+      });
 
       // Consume tokens (half cost for stage 1)
       await TokenManager.consumeTokens(
